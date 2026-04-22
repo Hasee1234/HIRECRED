@@ -11,6 +11,7 @@ import {
   Star,
   ChevronRight,
   Activity,
+  Trophy,
 } from "lucide-react";
 
 export default function AdminDashboard() {
