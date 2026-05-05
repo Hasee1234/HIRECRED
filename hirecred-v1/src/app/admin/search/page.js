@@ -1,7 +1,6 @@
 "use client";
-
 import { useState, useEffect } from "react";
-import Link from "next/link";
+
 import {
   Users,
   Award,
@@ -15,6 +14,10 @@ import {
   Sparkles,
   Sliders,
   Search,
+  Loader2,
+  X,
+  Briefcase,
+  Link
 } from "lucide-react";
 
 export default function SmartSearchPage() {

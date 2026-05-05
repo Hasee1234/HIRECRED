@@ -6,38 +6,36 @@ import { getCurrentUser } from "@/lib/auth";
 
 // Gemini API configuration
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent";
 
 // Helper function to call Gemini API
 async function callGemini(prompt) {
-  const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 3000,
-      },
-    }),
-  });
-  
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+      }),
+    }
+  );
+
   const data = await response.json();
-  
+
   if (data.error) {
     console.error("Gemini API error:", data.error);
     throw new Error(data.error.message || "AI service error");
   }
-  
+
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  
+
   try {
-    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\[\{[\s\S]*\}\]/) || text.match(/\{[\s\S]*\}/);
+    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/) || text.match(/\{[\s\S]*\}/);
     const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : text;
     return JSON.parse(jsonStr);
   } catch (e) {
     console.error("Failed to parse AI response:", text);
-    return [];
+    return null;
   }
 }
 

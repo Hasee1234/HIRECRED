@@ -17,6 +17,8 @@ export default function UserDashboard() {
   const [profile, setProfile] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [scoreLoading, setScoreLoading] = useState(false);
+const [scoreError, setScoreError] = useState("");
 
   useEffect(() => {
     const userData = localStorage.getItem("hirecred_user");
@@ -39,21 +41,43 @@ export default function UserDashboard() {
     }
   };
 
-  const generateScore = async () => {
-    try {
-      const res = await fetch("/api/ai/score", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setProfile((prev) => ({ ...prev, credScore: data.credScore }));
-      }
-    } catch (err) {
-      console.error(err);
+  
+const generateScore = async () => {
+  if (!user) return;
+  setScoreLoading(true);
+  setScoreError("");
+
+  try {
+    const res = await fetch("/api/ai/score", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId: user.id }),
+    });
+    const data = await res.json();
+
+    console.log("Score response:", data);
+
+    if (res.ok && data.credScore) {
+      setProfile((prev) => ({
+        ...prev,
+        credScore: {
+          score: data.credScore.score,
+          strengths: data.credScore.strengths,
+          risks: data.credScore.risks,
+          lastUpdated: data.credScore.lastUpdated,
+        },
+      }));
+    } else {
+      setScoreError(data.error || "Failed to generate score");
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setScoreError("Something went wrong");
+  } finally {
+    setScoreLoading(false);
+  }
+};
+
 
   const completionItems = [
     { label: "Bio added", done: profile?.bio?.length > 0 },
@@ -111,12 +135,23 @@ export default function UserDashboard() {
               style={{ width: `${profile?.credScore?.score || 0}%` }}
             />
           </div>
-          <button
-            onClick={generateScore}
-            className="mt-4 w-full text-xs text-brand-400 hover:text-brand-300 border border-brand-500/30 hover:border-brand-500 rounded-lg py-2 transition"
-          >
-            Regenerate Score
-          </button>
+          {scoreError && (
+  <p className="text-red-400 text-xs mt-2">{scoreError}</p>
+)}
+<button
+  onClick={generateScore}
+  disabled={scoreLoading}
+  className="mt-4 w-full text-xs text-brand-400 hover:text-brand-300 border border-brand-500/30 hover:border-brand-500 rounded-lg py-2 transition disabled:opacity-50"
+>
+  {scoreLoading ? (
+    <span className="flex items-center justify-center gap-2">
+      <div className="w-3 h-3 border border-brand-400 border-t-transparent rounded-full animate-spin" />
+      Generating...
+    </span>
+  ) : (
+    "Regenerate Score"
+  )}
+</button>
         </div>
 
         {/* Stats */}

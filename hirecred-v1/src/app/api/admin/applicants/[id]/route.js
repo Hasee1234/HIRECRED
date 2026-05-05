@@ -15,8 +15,7 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     
-    const { id } = params;
-    
+const { id } = await params;    
     // Get user
     const user = await User.findById(id).select("-password");
     if (!user || user.role !== "user") {
